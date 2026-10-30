@@ -1,0 +1,176 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "User profile and account information",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "credits": { "type": "number" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["uid", "email"]
+    },
+    "PaymentRequest": {
+      "title": "Payment Request",
+      "description": "Request for adding credits via manual transaction",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "userEmail": { "type": "string" },
+        "amount": { "type": "number" },
+        "credits": { "type": "number" },
+        "method": { "type": "string", "enum": ["bkash", "nagad", "rocket"] },
+        "transactionId": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "completed", "rejected"] },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "userId", "userEmail", "amount", "credits", "method", "transactionId", "status"]
+    },
+    "PaymentSettings": {
+      "title": "Payment Settings",
+      "description": "Global settings for payment numbers and types",
+      "type": "object",
+      "properties": {
+        "bkash": {
+          "type": "object",
+          "properties": {
+            "number": { "type": "string" },
+            "type": { "type": "string", "enum": ["Personal", "Merchant", "Agent"] }
+          }
+        },
+        "nagad": {
+          "type": "object",
+          "properties": {
+            "number": { "type": "string" },
+            "type": { "type": "string", "enum": ["Personal", "Merchant", "Agent"] }
+          }
+        },
+        "rocket": {
+          "type": "object",
+          "properties": {
+            "number": { "type": "string" },
+            "type": { "type": "string", "enum": ["Personal", "Merchant", "Agent"] }
+          }
+        }
+      }
+    },
+    "PricingSettings": {
+      "title": "Pricing Settings",
+      "description": "Rates for video and voice generation",
+      "type": "object",
+      "properties": {
+        "heygenRate": {
+          "type": "number",
+          "description": "Credits per second of video"
+        },
+        "v4CharRate": {
+          "type": "number",
+          "description": "Characters per 1 credit"
+        }
+      }
+    },
+    "VoiceGeneration": {
+      "title": "Voice Generation Record",
+      "description": "History of generated audio clips for the user",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "text": { "type": "string" },
+        "character": { "type": "string" },
+        "engine": { "type": "string" },
+        "bgm": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "userId", "text", "character"]
+    },
+    "VoiceClone": {
+      "title": "Custom Voice Clone",
+      "description": "Custom cloned voices belonging to a user",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "sampleUrl": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "userId", "name"]
+    },
+    "CartesiaKey": {
+      "title": "Cartesia Key Usage",
+      "description": "Tracking character usage per API key",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "index": { "type": "number" },
+        "label": { "type": "string" },
+        "charCountUsed": { "type": "number" },
+        "maxCharsLimit": { "type": "number" },
+        "isPaid": { "type": "boolean" },
+        "lastUsedAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      }
+    },
+    "GenerationHistory": {
+      "title": "Universal Generation History",
+      "description": "Combined history for voice and video for admin tracking",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "type": { "type": "string", "enum": ["voice", "video"] },
+        "userId": { "type": "string" },
+        "userEmail": { "type": "string" },
+        "model": { "type": "string" },
+        "chars": { "type": "number" },
+        "duration": { "type": "number" },
+        "cost": { "type": "number" },
+        "charge": { "type": "number" },
+        "profit": { "type": "number" },
+        "status": { "type": "string" },
+        "createdAt": { "type": "string" }
+      }
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "User profile records indexed by user ID"
+    },
+    "/payment_requests/{requestId}": {
+      "schema": { "$ref": "#/entities/PaymentRequest" },
+      "description": "Requests for credit additions"
+    },
+    "/settings/payment": {
+      "schema": { "$ref": "#/entities/PaymentSettings" },
+      "description": "Global payment configuration"
+    },
+    "/settings/pricing": {
+      "schema": { "$ref": "#/entities/PricingSettings" },
+      "description": "Global pricing rates"
+    },
+    "/voice_generations/{generationId}": {
+      "schema": { "$ref": "#/entities/VoiceGeneration" },
+      "description": "History of voice audio generations"
+    },
+    "/voice_clones/{cloneId}": {
+      "schema": { "$ref": "#/entities/VoiceClone" },
+      "description": "User cloned voice metadata"
+    },
+    "/cartesia_keys/{keyId}": {
+      "schema": { "$ref": "#/entities/CartesiaKey" },
+      "description": "Cartesia API Key usage tracking"
+    },
+    "/generation_history/{historyId}": {
+      "schema": { "$ref": "#/entities/GenerationHistory" },
+      "description": "Full generation logs for admin"
+    }
+  }
+}

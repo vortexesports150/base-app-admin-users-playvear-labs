@@ -1,0 +1,92 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Connection health check route
+    match /test/{document=**} {
+      allow read: if true;
+    }
+
+    // Helpers
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && request.auth.token.email == 'vortexesports150@gmail.com' && request.auth.token.email_verified == true;
+    }
+
+    function isNotBlocked() {
+      let userPath = /databases/$(database)/documents/users/$(request.auth.uid);
+      return !exists(userPath) || get(userPath).data.get('isBlocked', false) == false;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    // User Profile Rules
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if (isOwner(userId) && request.resource.data.credits == 0) || isAdmin();
+      allow update: if (isOwner(userId) && isNotBlocked() &&
+                       request.resource.data.diff(resource.data).affectedKeys().hasOnly(['displayName', 'photoURL', 'updatedAt', 'credits', 'v2Usage', 'v3Usage'])) ||
+                      isAdmin();
+    }
+
+    // Payment Request Rules
+    match /payment_requests/{requestId} {
+      allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() && isNotBlocked() &&
+                      request.resource.data.userId == request.auth.uid &&
+                      request.resource.data.status == 'pending' &&
+                      request.resource.data.amount > 0 &&
+                      request.resource.data.credits > 0 &&
+                      request.resource.data.method in ['bkash', 'nagad', 'rocket'];
+      allow update, delete: if isAdmin();
+    }
+
+    // Settings Rules (Allow public read for rates/payment info, write for admin)
+    match /settings/payment {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /settings/pricing {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Voice Generation Rules
+    match /voice_generations/{generationId} {
+      allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() && isNotBlocked() && request.resource.data.userId == request.auth.uid;
+    }
+
+    // Voice Clone Rules
+    match /voice_clones/{cloneId} {
+      allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow write: if (isSignedIn() && isNotBlocked() && (
+        (request.method == 'create' && request.resource.data.userId == request.auth.uid) ||
+        (request.method == 'update' && resource.data.userId == request.auth.uid)
+      )) || isAdmin();
+    }
+
+    // Generation History Rules
+    match /generation_history/{historyId} {
+      allow read: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() && isNotBlocked() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isAdmin();
+    }
+
+    // Cartesia Key Usage Rules
+    match /cartesia_keys/{keyId} {
+      allow read: if true;
+      allow write: if true;
+    }
+  }
+}

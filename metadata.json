@@ -1,0 +1,10 @@
+{
+  "name": "PlayVear Labs",
+  "description": "PlayVear Labs - AI Voice Generator with authentic Bangladeshi character voices, custom voice cloning, and background music for content creators",
+  "requestFramePermissions": [
+    "microphone"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
